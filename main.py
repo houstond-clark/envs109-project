@@ -5,11 +5,17 @@ import time
 import json
 import sys
 import signal
+import requests
+# For dealing with fetching run configurations
+import requests
+from urllib3.exceptions import InsecureRequestWarning
+
+# Suppress only the single warning from urllib3 needed.
+requests.packages.urllib3.disable_warnings(category=InsecureRequestWarning)
 
 from sense_hat import SenseHat
 from awscrt import io, mqtt
 from awsiot import mqtt_connection_builder
-# from vcgencmd import Vcgencmd
 
 # Set some default values
 senseHat = None
@@ -21,10 +27,20 @@ dataPoints = 720
 dataCounter = 0
 
 # Topic base
+RUN="default"
 CLIENT_ID = "control"
+try:
+    response = requests.get("https://rec.home/AQ/runs.json", verify=False)
+    jsonresp = json.loads(response.text)
+    RUN = jsonresp[CLIENT_ID]
+    print(f"Set run to {RUN}")
+except Exception:
+    print(Exception.with_traceback())
+    print("Could not set the run value..")
+    pass
+
 TOPIC_BASE = f"aq/{CLIENT_ID}"
 # The "run" name for this run of the data gathering
-RUN="default"
 TOPIC = f"{TOPIC_BASE}/{RUN}"
 
 # IoT Variables
